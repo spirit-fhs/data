@@ -1,0 +1,35 @@
+Name:                data
+Version:             0.1
+Synopsis:            RESTful data service for spirit apps
+Homepage:            http://pads.fh-schmalkalden.de/spirit.html
+License:             BSD3
+License-file:        LICENSE
+Author:              Oliver Braun
+Maintainer:          ob@obraun.net
+Category:            Misc
+Build-type:          Simple
+Cabal-version:       >=1.2
+
+Executable spiritservice
+  hs-source-dirs:    src
+  Main-is:           SpiritService.hs
+  Build-depends:     base >= 4.2 && < 5,
+                     blaze-builder,
+                     http-enumerator
+  ghc-options:       -Wall -fno-warn-unused-do-bind
+
+Executable simpleclient
+  hs-source-dirs:    src
+  Main-is:           SimpleClient.hs
+  Build-depends:     base >= 4.2 && < 5,
+                     bytestring,
+                     containers,
+                     enumerator,
+                     text,
+                     transformers,
+                     aeson,
+                     attoparsec-enumerator,
+                     http-types,
+                     wai,
+                     warp
+  ghc-options:       -Wall -fno-warn-unused-do-bind
