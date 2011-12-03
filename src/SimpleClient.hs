@@ -6,7 +6,7 @@ import Network.HTTP.Enumerator
     , requestBody
     )
 import Data.Aeson (Value (Object, String))
-import qualified Data.Map as Map
+import qualified Data.HashMap.Lazy as Map
 import Data.Aeson.Parser (json)
 import Data.Attoparsec.Enumerator (iterParser)
 import Control.Monad.IO.Class (liftIO)

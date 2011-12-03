@@ -15,21 +15,22 @@ Executable spiritservice
   Main-is:           SpiritService.hs
   Build-depends:     base >= 4.2 && < 5,
                      blaze-builder,
-                     http-enumerator
-  ghc-options:       -Wall -fno-warn-unused-do-bind
+                     http-enumerator,
+                     unordered-containers >= 0.1.4 && < 0.1.5
+  ghc-options:       -Wall -fno-warn-unused-do-bind -O2
 
 Executable simpleclient
   hs-source-dirs:    src
   Main-is:           SimpleClient.hs
   Build-depends:     base >= 4.2 && < 5,
                      bytestring,
-                     containers,
+                     unordered-containers,
                      enumerator,
                      text,
                      transformers,
-                     aeson,
+                     aeson >= 0.4 && < 0.5,
                      attoparsec-enumerator,
                      http-types,
                      wai,
                      warp
-  ghc-options:       -Wall -fno-warn-unused-do-bind
+  ghc-options:       -Wall -fno-warn-unused-do-bind -O2
