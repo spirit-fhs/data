@@ -1,0 +1,10 @@
+Data with akka 2.0 
+------------------
+
+This is the Data-Rest-Service for spirit 2.0. 
+
+$ sbt
+> run
+
+localhost:9000/rest/2.0?method=get.news 
+
