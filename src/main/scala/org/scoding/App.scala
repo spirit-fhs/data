@@ -43,26 +43,50 @@ import akka.pattern.ask
 import akka.util.Timeout
 import akka.util.duration._
 import akka.dispatch.Await
+import org.scoding.oauth.{OAuthProvider, 
+  GetRequesetToken, 
+  OAuthResult, 
+  GetAccessToken, 
+  ValidateSignature,
+  OAuthValidationResult}
+import org.scoding.oauth.ValidateSignature
 
 object DataApp extends Application {
   private val endpoint = "/rest/2.0"
   
-  val system = ActorSystem("SpiritData")
-  val spiritService = system.actorOf(Props[SpiritService], name = "spirit-service")  
-     
+  val systemSpirit = ActorSystem("SpiritData")
+  val spiritService = systemSpirit.actorOf(Props[SpiritService], name = "spirit-service")  
+  
+  val systemOAuth = ActorSystem("SpiritOAuth")
+  val spiritOAuth = systemOAuth.actorOf(Props[OAuthProvider], name = "spirit-oauth")
+  
   def route  =  {
-    case GET(Path("/request_token")) =>  Action{ request =>
+    case POST(Path("/oauth-provider/request_token")) =>  Action{ request =>     
+      implicit val timeout = Timeout(5 seconds)
+      val future = spiritOAuth ? GetRequesetToken(request) 
+      val token = Await.result(future, timeout.duration).asInstanceOf[OAuthResult]
+      token.response
+    }
+    case GET(Path("/oauth-provider/authorize")) =>  Action{ request =>
       Ok(<h1>TODO!</h1>).as("text/html")
     }
-    case GET(Path("/authorize_access")) =>  Action{ request =>
-      Ok(<h1>TODO!</h1>).as("text/html")
+    case POST(Path("/oauth-provider/access_token")) =>  Action{ request =>           
+      implicit val timeout = Timeout(5 seconds)
+      val future = spiritOAuth ? GetAccessToken(request) 
+      val token = Await.result(future, timeout.duration).asInstanceOf[OAuthResult]
+      token.response
     }
-    case GET(Path("/access_token")) =>  Action{ request =>
-      Ok(<h1>TODO!</h1>).as("text/html")
+    // Only as test
+    case POST(Path("/oauth-provider/test")) =>  Action{ request =>           
+      implicit val timeout = Timeout(5 seconds)
+      val future = spiritOAuth ? ValidateSignature(request) 
+      val validation = Await.result(future, timeout.duration).asInstanceOf[OAuthValidationResult]
+      if(validation.hasAccess) Ok(<h1>Access!</h1>).as("text/html")
+      else validation.statusMsg
     }
     case GET(Path(endpoint)) => Action{ request =>
            
-      val responseHandler = system.actorOf(Props[ResponseHandler]) 
+      val responseHandler = systemSpirit.actorOf(Props[ResponseHandler]) 
       
       spiritService.tell(SpiritRequest(request.queryString), responseHandler)
       
@@ -100,6 +124,6 @@ class ResponseHandler extends Actor {
     case SpiritError(err) => 
       isError = true
       error = err
-      status = true
+      status = true 
   }
 }
