@@ -33,12 +33,15 @@
 
 package org.scoding
 
-import play.api.mvc.{Request, AnyContent, SimpleResult}
+import play.api.mvc.Results.Status
 import play.api.libs.json._
 import Json._
 
-sealed trait SpiritMessage 
-case class SpiritRequest(request: Request[AnyContent]) extends SpiritMessage
-case class SpiritResponse(response: JsValue) extends SpiritMessage
-case object SpiritResult extends SpiritMessage
-case class SpiritError(status: SimpleResult[JsValue]) extends SpiritMessage
+object SpiritException {
+  def get(status: Int, message: String, errorType: String) = {
+    Status(status)(toJson(Map("exception" -> 
+      Map("message" -> message,
+        "type" -> errorType,
+        "status" -> status.toString()))))  
+  }
+}

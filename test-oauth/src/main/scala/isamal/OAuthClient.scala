@@ -42,7 +42,7 @@ trait OAuth
         map(e => encode(e._1)+"="+encode(e._2)).mkString("&")
     
     
-    protected def _post(urls: String, 
+    /*protected*/ def _post(urls: String, 
              params: Map[String, String] = Map(),
              props: Map[String, String] = Map()) : Option[String] =
         {
@@ -76,7 +76,7 @@ trait OAuth
         res.flatMap(s=>Some(parseValues(s)))
         }
 
-    protected def _get(baseUrl: String, 
+    /*protected*/ def _get(baseUrl: String, 
              params: Map[String, String] = Map(),
              props: Map[String, String] = Map()) : Option[String] =
         {
@@ -350,6 +350,20 @@ class OAuth1(
             trace("authStr: " + authStr)
             _post(urls, params, props=Map("Authorization"->authStr))   
         }
+    // Only for test
+    def doPostFail2(urls: String, params: Map[String, String] = Map()) : Option[String] =
+        {
+        if (!checkAccess)
+            None
+        else
+            {
+            val oparams = accessParams
+            val sig = signature("POST", urls, oparams++params, "fef0249c237470fb7d2ad2476c1e625c")
+            val authStr = authorizationString(oparams + ("oauth_signature" -> sig) )
+            trace("authStr: " + authStr)
+            _post(urls, params, props=Map("Authorization"->authStr))
+            }
+        }
 
     override def doGet(urls: String, params: Map[String, String] = Map()) : Option[String] =
         {
@@ -359,6 +373,20 @@ class OAuth1(
             {
             val oparams = accessParams
             val sig = signature("GET", urls, oparams++params, acct.accessTokenSecret)
+            val authStr = authorizationString(oparams + ("oauth_signature" -> sig) )
+            trace("authStr: " + authStr)
+            _get(urls, params, props=Map("Authorization"->authStr))
+            }
+        }
+    // Onlay as test
+    def doGetFail(urls: String, params: Map[String, String] = Map()) : Option[String] =
+        {
+        if (!checkAccess)
+            None
+        else
+            {
+            val oparams = accessParams
+            val sig = signature("GET", urls, oparams++params, "fef0249c237470fb7d2ad2476c1e625c")
             val authStr = authorizationString(oparams + ("oauth_signature" -> sig) )
             trace("authStr: " + authStr)
             _get(urls, params, props=Map("Authorization"->authStr))

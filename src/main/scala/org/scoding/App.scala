@@ -49,7 +49,6 @@ import org.scoding.oauth.{OAuthProvider,
   GetAccessToken, 
   ValidateSignature,
   OAuthValidationResult}
-import org.scoding.oauth.ValidateSignature
 
 object DataApp extends Application {
   private val endpoint = "/rest/2.0"
@@ -84,11 +83,29 @@ object DataApp extends Application {
       if(validation.hasAccess) Ok(<h1>Access!</h1>).as("text/html")
       else validation.statusMsg
     }
+    // Only as test
+    case GET(Path("/oauth-provider/test")) =>  Action{ request =>           
+      implicit val timeout = Timeout(5 seconds)
+      val future = spiritOAuth ? ValidateSignature(request) 
+      val validation = Await.result(future, timeout.duration).asInstanceOf[OAuthValidationResult]
+      if(validation.hasAccess) Ok(<h1>Access!</h1>).as("text/html")
+      else validation.statusMsg
+    }
     case GET(Path(endpoint)) => Action{ request =>
            
       val responseHandler = systemSpirit.actorOf(Props[ResponseHandler]) 
       
-      spiritService.tell(SpiritRequest(request.queryString), responseHandler)
+      spiritService.tell(SpiritRequest(request), responseHandler)
+      
+      implicit val timeout = Timeout(5 seconds)
+      val future = responseHandler ? SpiritResult 
+      Await.result(future, timeout.duration).asInstanceOf[Result]
+    }
+    case POST(Path(endpoint)) => Action{ request =>
+           
+      val responseHandler = systemSpirit.actorOf(Props[ResponseHandler]) 
+      
+      spiritService.tell(SpiritRequest(request), responseHandler)
       
       implicit val timeout = Timeout(5 seconds)
       val future = responseHandler ? SpiritResult 
@@ -103,7 +120,7 @@ class ResponseHandler extends Actor {
   private var response = Ok(toJson(Map[String,String]()))
   private var status = false
   private var isError = false
-  private var error = Ok("")
+  private var error = Ok(toJson(Map[String,String]()))
   def receive = {
     case SpiritResponse(result) =>
       response = Ok(result)

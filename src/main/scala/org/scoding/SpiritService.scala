@@ -36,8 +36,6 @@ package org.scoding
 import akka.actor.Actor
 import akka.actor.Props
 import akka.actor._
-import play.api.mvc.Results.NotFound
-import play.api.mvc.Results.Status
 
 class SpiritService extends Actor {
   
@@ -45,15 +43,21 @@ class SpiritService extends Actor {
   
   def receive = {
     case SpiritRequest(request) =>
-     val query = toStringMap(request)
+     val query = request.method match {
+       case "GET" => toStringMap(request.queryString)
+       case "POST" => toStringMap(
+           request.body.asFormUrlEncoded.getOrElse(Map[String,Seq[String]]())) 
+       case _ => Map[String,String]()    
+     } 
+     
      query.get("method") match {
         case Some("get.news") => 
           val replyTo = sender
           val aggregator = context.actorOf(Props(new Aggregator(replyTo)))
           newsActor.tell(query, aggregator)  
         case _ => 
-          val error = Status(404)("Not Found")
-          sender ! SpiritError(error) 
+          val error = SpiritException.get(404,"method not found", "SpiritServiceException")
+          sender ! SpiritError(error)
      }
   }
   
